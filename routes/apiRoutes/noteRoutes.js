@@ -1,27 +1,31 @@
 const router = require("express").Router();
-const save = require("./db/save");
+const notes = require("../../db/db.json");
+const fs = require("fs")
+const noteID = notes.map(note => note.id);
+const path = require('path');
+
 
 // GET "/api/notes" responds with all notes from the database
 router.get("/notes", function(req, res) {
-  save
-    .getNotes()
-    .then(notes => res.json(notes))
-    .catch(err => res.status(500).json(err));
+  res.json(notes);
 });
 
 router.post("/notes", (req, res) => {
-  save
-    .addNote(req.body)
-    .then((note) => res.json(note))
-    .catch(err => res.status(500).json(err));
-});
+  let newID = 0;
+  while(noteID.includes(newID)) {
+      newID++;
+  }
 
-// // BONUS DELETE "/api/notes" deletes the note with an id equal to req.params.id
-// router.delete("/notes/:id", function(req, res) {
-//   save
-//     .removeNote(req.params.id)
-//     .then(() => res.json({ ok: true }))
-//     .catch(err => res.status(500).json(err));
-// });
+  req.body.id = newID;
+  noteID.push(newID);
+
+  const noteBody = req.body;
+  notes.push(noteBody);
+  res.json(noteBody);
+
+  fs.writeFileSync(path.join(__dirname, "../../db/db.json"), 
+  JSON.stringify(notes, null, 2)
+  );
+});
 
 module.exports = router;
